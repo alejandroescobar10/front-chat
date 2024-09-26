@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 // Se asigna el dominio del backend (debe coincidir con el backend)
 // Aquí se establece la conexión con el servidor de Socket.io.
-const socket = io("https://back-chat-alpha.vercel.app/");
+const socket = io("http://localhost:4000");
 
 function App() {
   // Definimos el estado para almacenar el mensaje que el usuario está escribiendo
