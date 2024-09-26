@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 // Se asigna el dominio del backend (debe coincidir con el backend)
 // Aquí se establece la conexión con el servidor de Socket.io.
 const socket = io("https://back-chat-flame.vercel.app", {
-  transports: ["websocket", "polling"],
+  transports: ["polling"],
 });
 
 function App() {
