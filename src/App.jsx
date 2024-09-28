@@ -4,51 +4,50 @@ import { Realtime } from "ably";
 function App() {
   const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
   const [messages, setMessages] = useState([]); // Todos los mensajes
-  const ably = useRef(
-    new Realtime({
-      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
-    })
-  ); // Reutilizar la misma instancia de Ably
-  const channel = useRef(null); // Referencia al canal
+  const messagesEndRef = useRef(null); // Referencia al final del contenedor de mensajes
 
   useEffect(() => {
-    // Conectarse al canal solo una vez cuando el componente se monta
-    channel.current = ably.current.channels.get("chat-demo");
+    const ably = new Realtime({
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    });
+    const channel = ably.channels.get("chat-demo");
 
-    // Escuchar los mensajes que llegan en el canal
-    channel.current.subscribe((msg) => {
-      // Diferenciar si el mensaje es del usuario actual o de otro
-      const isCurrentUser = msg.connectionId === ably.current.connection.id;
+    channel.subscribe((msg) => {
       setMessages((prevMessages) => [
         ...prevMessages,
-        { from: isCurrentUser ? "Me" : "Other", body: msg.data },
+        { from: "Other", body: msg.data },
       ]);
     });
 
-    // Limpiar la suscripción cuando el componente se desmonta
     return () => {
-      channel.current.unsubscribe();
+      channel.unsubscribe();
     };
   }, []);
-  useEffect(() => {
-    // Scroll hacia abajo al añadir un nuevo mensaje
-    const chatContainer = document.querySelector(".chat-container");
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-  }, [messages]);
 
-  // Función para enviar un mensaje
   const handleSubmit = (e) => {
-    e.preventDefault(); // Evitar el comportamiento por defecto del formulario
-    if (message.trim() === "") return; // No permitir mensajes vacíos
+    e.preventDefault();
+    if (message.trim() === "") return;
 
-    // Enviar el mensaje a través de Ably
-    channel.current.publish("message", message);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { from: "Me", body: message },
+    ]);
 
-    // Limpiar el campo de texto
+    const ably = new Realtime({
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    });
+    const channel = ably.channels.get("chat-demo");
+    channel.publish("message", message);
+
     setMessage("");
   };
+
+  // Desplazar hacia abajo al final del contenedor de mensajes
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   return (
     <div className="h-screen bg-zinc-800 text-white flex items-center justify-center rounded-md">
@@ -63,16 +62,18 @@ function App() {
         />
         <button type="submit">Enviar</button>
         <ul className="max-h-60 overflow-y-auto">
-          {messages.map((message, i) => (
+          {messages.map((msg, i) => (
             <li
               key={i}
               className={`my-2 p-2 table text-sm rounded-md ${
-                message.from === "Me" ? "bg-sky-700 ml-auto" : "bg-black"
+                msg.from === "Me" ? "bg-sky-700 ml-auto" : "bg-black"
               }`}
             >
-              {message.from}: {message.body}
+              {msg.from}: {msg.body}
             </li>
           ))}
+          <div ref={messagesEndRef} />{" "}
+          {/* Elemento de referencia para el desplazamiento */}
         </ul>
       </form>
     </div>
