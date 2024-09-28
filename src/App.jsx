@@ -10,6 +10,7 @@ function App() {
     })
   ); // Reutilizar la misma instancia de Ably
   const channel = useRef(null); // Referencia al canal
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
     // Conectarse al canal solo una vez cuando el componente se monta
