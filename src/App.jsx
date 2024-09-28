@@ -30,7 +30,7 @@ function App() {
       channel.current.unsubscribe();
     };
   }, []);
-
+  // useeffect para mandar hacia abajo el mensaje
   useEffect(() => {
     // Desplazar hacia abajo al añadir un nuevo mensaje
     if (messagesEndRef.current) {
