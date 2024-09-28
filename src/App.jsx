@@ -1,33 +1,31 @@
-import React, { useState, useEffect } from "react";
-import { Realtime } from "ably"; // Importar el cliente de Ably
+import React, { useState, useEffect, useRef } from "react";
+import { Realtime } from "ably";
 
 function App() {
   const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
   const [messages, setMessages] = useState([]); // Todos los mensajes
+  const ably = useRef(
+    new Realtime({
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    })
+  ); // Reutilizar la misma instancia de Ably
+  const channel = useRef(null); // Referencia al canal
 
   useEffect(() => {
-    // Inicializar la conexión con Ably usando tu API Key
-    const ably = new Realtime({
-      key:
-        process.env.REACT_APP_ABLY_API_KEY ||
-        "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
-    });
-
-    // Conectarse a un canal
-    const channel = ably.channels.get("chat-demo");
+    // Conectarse al canal solo una vez cuando el componente se monta
+    channel.current = ably.current.channels.get("chat-demo");
 
     // Escuchar los mensajes que llegan en el canal
-    channel.subscribe((msg) => {
-      // Actualizar el estado con los mensajes recibidos
+    channel.current.subscribe((msg) => {
       setMessages((prevMessages) => [
         ...prevMessages,
-        { from: "Other", body: msg.data },
+        { from: "You", body: msg.data },
       ]);
     });
 
     // Limpiar la suscripción cuando el componente se desmonta
     return () => {
-      channel.unsubscribe();
+      channel.current.unsubscribe();
     };
   }, []);
 
@@ -42,12 +40,8 @@ function App() {
       { from: "Me", body: message },
     ]);
 
-    // Enviar el mensaje a través de Ably
-    const ably = new Realtime({
-      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
-    });
-    const channel = ably.channels.get("chat-demo");
-    channel.publish("message", message); // Publicar el mensaje en el canal
+    // Enviar el mensaje a través de Ably sin volver a crear la instancia
+    channel.current.publish("message", message);
 
     // Limpiar el campo de texto
     setMessage("");
