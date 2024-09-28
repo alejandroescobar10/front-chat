@@ -4,11 +4,7 @@ import { Realtime } from "ably";
 function App() {
   const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
   const [messages, setMessages] = useState([]); // Todos los mensajes
-  const ably = useRef(
-    new Realtime({
-      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
-    })
-  ); // Reutilizar la misma instancia de Ably
+  const ably = useRef(new Realtime({ key: "TU_API_KEY_DE_ABLY" })); // Reutilizar la misma instancia de Ably
   const channel = useRef(null); // Referencia al canal
 
   useEffect(() => {
@@ -17,9 +13,11 @@ function App() {
 
     // Escuchar los mensajes que llegan en el canal
     channel.current.subscribe((msg) => {
+      // Diferenciar si el mensaje es del usuario actual o de otro
+      const isCurrentUser = msg.connectionId === ably.current.connection.id;
       setMessages((prevMessages) => [
         ...prevMessages,
-        { from: "You", body: msg.data },
+        { from: isCurrentUser ? "Me" : "Other", body: msg.data },
       ]);
     });
 
@@ -34,13 +32,7 @@ function App() {
     e.preventDefault(); // Evitar el comportamiento por defecto del formulario
     if (message.trim() === "") return; // No permitir mensajes vacíos
 
-    // Añadir el mensaje localmente (antes de enviarlo)
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { from: "Me", body: message },
-    ]);
-
-    // Enviar el mensaje a través de Ably sin volver a crear la instancia
+    // Enviar el mensaje a través de Ably
     channel.current.publish("message", message);
 
     // Limpiar el campo de texto
