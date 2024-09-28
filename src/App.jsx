@@ -4,7 +4,11 @@ import { Realtime } from "ably";
 function App() {
   const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
   const [messages, setMessages] = useState([]); // Todos los mensajes
-  const ably = useRef(new Realtime({ key: "TU_API_KEY_DE_ABLY" })); // Reutilizar la misma instancia de Ably
+  const ably = useRef(
+    new Realtime({
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    })
+  ); // Reutilizar la misma instancia de Ably
   const channel = useRef(null); // Referencia al canal
 
   useEffect(() => {
