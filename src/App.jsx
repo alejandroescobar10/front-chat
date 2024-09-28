@@ -21,7 +21,7 @@ function App() {
       const isCurrentUser = msg.connectionId === ably.current.connection.id;
       setMessages((prevMessages) => [
         ...prevMessages,
-        { from: isCurrentUser ? "Me" : "Other", body: msg.data },
+        { from: isCurrentUser ? "Me" : "You", body: msg.data },
       ]);
     });
 
@@ -30,11 +30,11 @@ function App() {
       channel.current.unsubscribe();
     };
   }, []);
+
   useEffect(() => {
-    // Scroll hacia abajo al añadir un nuevo mensaje
-    const chatContainer = document.querySelector(".chat-container");
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
+    // Desplazar hacia abajo al añadir un nuevo mensaje
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages]);
 
