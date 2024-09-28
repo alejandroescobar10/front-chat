@@ -1,48 +1,55 @@
-import React from "react";
-import io from "socket.io-client";
-import { useState, useEffect } from "react";
-
-// Se asigna el dominio del backend (debe coincidir con el backend)
-// Aquí se establece la conexión con el servidor de Socket.io.
-const socket = io("https://back-chat-flame.vercel.app", {
-  transports: ["polling"],
-});
+import React, { useState, useEffect } from "react";
+import { Realtime } from "ably"; // Importar el cliente de Ably
 
 function App() {
-  // Definimos el estado para almacenar el mensaje que el usuario está escribiendo
-  const [message, setMessage] = useState("");
-  // Estado para almacenar todos los mensajes que se han enviado y recibido
-  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
+  const [messages, setMessages] = useState([]); // Todos los mensajes
 
-  // Función que maneja el envío de mensajes
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Prevenir el comportamiento por defecto del formulario (recargar la página)
-    // Creamos un objeto con el mensaje actual y la información del remitente
-    const newMessage = {
-      body: message, // El mensaje que el usuario ha escrito
-      from: "Me", // Este mensaje es enviado desde el cliente ("Me" representa al usuario)
-    };
-    //ver los mensjaes que uno envia
-    setMessages([...messages, newMessage]);
-    // Actualizamos el estado local con el nuevo mensaje (solo en el frontend por ahora)
-    socket.emit("message", message);
-  };
-
-  // useEffect es un hook que se ejecuta después de que el componente se haya montado
   useEffect(() => {
-    // Escuchamos el evento "message" que viene del backend (cuando alguien más envía un mensaje)
-    socket.on("message", receiveMessage); //llama a la función para actualizar los mensajes en el estado  de la app
+    // Inicializar la conexión con Ably usando tu API Key
+    const ably = new Realtime({
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    }); // Reemplaza con tu API Key de Ably
 
-    // Limpiamos el evento cuando el componente se desmonta, para evitar posibles fugas de memoria
+    // Conectarse a un canal
+    const channel = ably.channels.get("chat-demo");
+
+    // Escuchar los mensajes que llegan en el canal
+    channel.subscribe((msg) => {
+      // Actualizar el estado con los mensajes recibidos
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { from: "Other", body: msg.data },
+      ]);
+    });
+
+    // Limpiar la suscripción cuando el componente se desmonta
     return () => {
-      socket.off("message", receiveMessage); // Deja de escuchar el evento "message" cuando se desmonta
+      channel.unsubscribe();
     };
-  }, []); // [] asegura que solo se ejecute una vez, al montarse el componente
+  }, []);
 
-  // Función para manejar los mensajes recibidos del servidor y agregarlos al estado local
-  const receiveMessage = (message) =>
-    // Actualiza el estado añadiendo el nuevo mensaje al final del array de mensajes
-    setMessages((state) => [...state, message]);
+  // Función para enviar un mensaje
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Evitar el comportamiento por defecto del formulario
+    if (message.trim() === "") return; // No permitir mensajes vacíos
+
+    // Añadir el mensaje localmente (antes de enviarlo)
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { from: "Me", body: message },
+    ]);
+
+    // Enviar el mensaje a través de Ably
+    const ably = new Realtime({
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    });
+    const channel = ably.channels.get("chat-demo");
+    channel.publish("message", message); // Publicar el mensaje en el canal
+
+    // Limpiar el campo de texto
+    setMessage("");
+  };
 
   return (
     <div className="h-screen bg-zinc-800 text-white flex items-center justify-center rounded-md">
@@ -52,19 +59,19 @@ function App() {
           type="text"
           placeholder="Escribe el mensaje"
           className="border-2 border-zinc-500 p-2 w-full text-black"
+          value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <button>Enviar</button>
+        <button type="submit">Enviar</button>
         <ul>
           {messages.map((message, i) => (
             <li
               key={i}
               className={`my-2 p-2 table text-sm rounded-md ${
-                message.from === "Me" ? "bg-sky-700 ml-auto" : `bg-black`
+                message.from === "Me" ? "bg-sky-700 ml-auto" : "bg-black"
               }`}
             >
-              {/* Si el mensaje es mío, muestra "Me", si no, muestra "You" */}
-              {message.from === "Me" ? "Me" : "You"}: {message.body}
+              {message.from}: {message.body}
             </li>
           ))}
         </ul>
