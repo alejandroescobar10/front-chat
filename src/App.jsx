@@ -13,10 +13,13 @@ function App() {
     const channel = ably.channels.get("chat-demo");
 
     channel.subscribe((msg) => {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { from: "Other", body: msg.data },
-      ]);
+      // Agregar solo si el mensaje no es del usuario que envió
+      if (msg.data.from !== "Me") {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { from: "Other", body: msg.data },
+        ]);
+      }
     });
 
     return () => {
@@ -28,16 +31,17 @@ function App() {
     e.preventDefault();
     if (message.trim() === "") return;
 
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { from: "Me", body: message },
-    ]);
+    // Añadir el mensaje del usuario localmente
+    const newMessage = { from: "Me", body: message };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
 
     const ably = new Realtime({
       key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
     });
     const channel = ably.channels.get("chat-demo");
-    channel.publish("message", message);
+
+    // Publicar el mensaje
+    channel.publish("message", newMessage); // Publica el mensaje como un objeto
 
     setMessage("");
   };
