@@ -30,6 +30,13 @@ function App() {
       channel.current.unsubscribe();
     };
   }, []);
+  useEffect(() => {
+    // Scroll hacia abajo al añadir un nuevo mensaje
+    const chatContainer = document.querySelector(".chat-container");
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [messages]);
 
   // Función para enviar un mensaje
   const handleSubmit = (e) => {
@@ -55,7 +62,7 @@ function App() {
           onChange={(e) => setMessage(e.target.value)}
         />
         <button type="submit">Enviar</button>
-        <ul>
+        <ul className="max-h-60 overflow-y-auto">
           {messages.map((message, i) => (
             <li
               key={i}
