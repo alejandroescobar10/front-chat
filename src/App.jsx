@@ -8,8 +8,10 @@ function App() {
   useEffect(() => {
     // Inicializar la conexión con Ably usando tu API Key
     const ably = new Realtime({
-      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
-    }); // Reemplaza con tu API Key de Ably
+      key:
+        process.env.REACT_APP_ABLY_API_KEY ||
+        "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+    });
 
     // Conectarse a un canal
     const channel = ably.channels.get("chat-demo");
