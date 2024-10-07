@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Realtime } from "ably";
 
-function App({ sessionId }) {
+function App({ sessionId, clientId }) {
   const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
   const [messages, setMessages] = useState([]); // Todos los mensajes recibidos
   const ably = useRef(
     new Realtime({
-      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4", // API Key de Ably
+      authUrl: "/api/auth", // URL del endpoint de autenticación en Vercel
+      clientId: clientId, // Identificador único del cliente
     })
   ); // Reutilizar la misma instancia de Ably
   const channel = useRef(null); // Referencia al canal de Ably
@@ -19,7 +20,7 @@ function App({ sessionId }) {
     // Escuchar los mensajes que llegan en el canal
     channel.current.subscribe("message", (msg) => {
       // Diferenciar si el mensaje es del usuario actual o de otro
-      const isCurrentUser = msg.connectionId === ably.current.connection.id;
+      const isCurrentUser = msg.clientId === clientId;
       setMessages((prevMessages) => [
         ...prevMessages,
         { from: isCurrentUser ? "Me" : "You", body: msg.data },
@@ -30,7 +31,7 @@ function App({ sessionId }) {
     return () => {
       channel.current.unsubscribe();
     };
-  }, [sessionId]);
+  }, [sessionId, clientId]);
 
   useEffect(() => {
     // Desplazar hacia abajo automáticamente al recibir un nuevo mensaje
