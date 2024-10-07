@@ -14,10 +14,10 @@ function App({ sessionId }) {
 
   useEffect(() => {
     // Conectarse al canal solo una vez cuando el componente se monta
-    channel.current = ably.current.channels.get(`chat-${sessionId}`);
+    channel.current = ably.current.channels.get(`private-chat-${sessionId}`);
 
     // Escuchar los mensajes que llegan en el canal
-    channel.current.subscribe((msg) => {
+    channel.current.subscribe("message", (msg) => {
       // Diferenciar si el mensaje es del usuario actual o de otro
       const isCurrentUser = msg.connectionId === ably.current.connection.id;
       setMessages((prevMessages) => [
