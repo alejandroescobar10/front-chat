@@ -13,15 +13,8 @@ function App({ sessionId }) {
   const messagesEndRef = useRef(null); // Para el scroll automático
 
   useEffect(() => {
-    // Generar un identificador único para cada instancia de chat
-    const uniqueSessionId = `${sessionId}-${Math.random()
-      .toString(36)
-      .substr(2, 9)}`;
-
     // Conectarse al canal solo una vez cuando el componente se monta
-    channel.current = ably.current.channels.get(
-      `private-chat-${uniqueSessionId}`
-    );
+    channel.current = ably.current.channels.get(`private-chat-${sessionId}`);
 
     // Escuchar los mensajes que llegan en el canal
     channel.current.subscribe("message", (msg) => {
@@ -52,11 +45,7 @@ function App({ sessionId }) {
     if (message.trim() === "") return; // No permitir mensajes vacíos
 
     // Enviar el mensaje a través de Ably
-    const messageData = {
-      body: message,
-      to: "RecipientID", // Aquí puedes poner el ID del destinatario
-    };
-    channel.current.publish("message", messageData);
+    channel.current.publish("message", message);
 
     // Limpiar el campo de texto después de enviar
     setMessage("");
