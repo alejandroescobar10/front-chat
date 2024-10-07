@@ -52,7 +52,11 @@ function App({ sessionId }) {
     if (message.trim() === "") return; // No permitir mensajes vacíos
 
     // Enviar el mensaje a través de Ably
-    channel.current.publish("message", message);
+    const messageData = {
+      body: message,
+      to: "RecipientID", // Aquí puedes poner el ID del destinatario
+    };
+    channel.current.publish("message", messageData);
 
     // Limpiar el campo de texto después de enviar
     setMessage("");
