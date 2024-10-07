@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Realtime } from "ably";
 
-function App() {
+function App({ sessionId }) {
   const [message, setMessage] = useState(""); // Mensaje que escribe el usuario
-  const [messages, setMessages] = useState([]); // Todos los mensajes
+  const [messages, setMessages] = useState([]); // Todos los mensajes recibidos
   const ably = useRef(
     new Realtime({
-      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4",
+      key: "6bgz8Q.pc07CQ:rjC34iblLGHkCAcy4YUVArd0gFn0cg4WKVuXgEKsNR4", // API Key de Ably
     })
   ); // Reutilizar la misma instancia de Ably
-  const channel = useRef(null); // Referencia al canal
-  const messagesEndRef = useRef(null);
+  const channel = useRef(null); // Referencia al canal de Ably
+  const messagesEndRef = useRef(null); // Para el scroll automático
 
   useEffect(() => {
     // Conectarse al canal solo una vez cuando el componente se monta
-    channel.current = ably.current.channels.get("chat-demo");
+    channel.current = ably.current.channels.get(`chat-${sessionId}`);
 
     // Escuchar los mensajes que llegan en el canal
     channel.current.subscribe((msg) => {
@@ -30,10 +30,10 @@ function App() {
     return () => {
       channel.current.unsubscribe();
     };
-  }, []);
-  // useeffect para mandar hacia abajo el mensaje
+  }, [sessionId]);
+
   useEffect(() => {
-    // Desplazar hacia abajo al añadir un nuevo mensaje
+    // Desplazar hacia abajo automáticamente al recibir un nuevo mensaje
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
@@ -47,13 +47,13 @@ function App() {
     // Enviar el mensaje a través de Ably
     channel.current.publish("message", message);
 
-    // Limpiar el campo de texto
+    // Limpiar el campo de texto después de enviar
     setMessage("");
   };
 
   return (
-    <div className="h-screen bg-zinc-800 text-white flex items-center justify-center rounded-md">
-      <form onSubmit={handleSubmit} className="bg-zinc-900 p-10">
+    <div className="h-screen bg-gray-100 text-white flex items-center justify-center">
+      <form onSubmit={handleSubmit} className="bg-blue-500 p-10">
         <h1 className="text-2xl font-bold my-2">Chat</h1>
         <input
           type="text"
@@ -74,6 +74,8 @@ function App() {
               {message.from}: {message.body}
             </li>
           ))}
+          {/* Añadir un div de referencia para el scroll */}
+          <div ref={messagesEndRef} />
         </ul>
       </form>
     </div>
