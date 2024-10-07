@@ -13,7 +13,7 @@ function App({ sessionId }) {
   const messagesEndRef = useRef(null); // Para el scroll automático
 
   useEffect(() => {
-    // Conectarse al canal solo una vez cuando el componente se monta
+    // Conectarse al canal usando el sessionId proporcionado
     channel.current = ably.current.channels.get(`private-chat-${sessionId}`);
 
     // Escuchar los mensajes que llegan en el canal
